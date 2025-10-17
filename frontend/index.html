@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BandAId</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="header-left">
+                <div class="logo-space">
+                    <img src="" alt="">
+                </div>
+            </div>
+            <div class="header-center">
+                <h1 class="main-heading">BandAId</h1>
+                <p class="tagline">AI Wound Infection Detection</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="upload-section">
+                <h2>Upload or Capture Wound Image</h2>
+                <p class="instruction">Choose an option below to analyze a wound</p>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Upload Image
+                    </button>
+                    <button class="btn btn-primary" onclick="openCamera()">
+                        Take Photo
+                    </button>
+                </div>
+
+                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+
+                <!-- Camera Section (hidden by default) -->
+                <div id="cameraSection" class="camera-section" style="display: none;">
+                    <video id="camera" autoplay playsinline></video>
+                    <div class="camera-controls">
+                        <button class="btn btn-success" onclick="capturePhoto()">
+                            Capture
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeCamera()">
+                            Cancel
+                        </button>
+                    </div>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                </div>
+
+                <!-- Image Preview Section -->
+                <div id="previewSection" class="preview-section" style="display: none;">
+                    <h3>Selected Image</h3>
+                    <img id="imagePreview" alt="Wound preview">
+                    <div class="preview-actions">
+                        <button class="btn btn-success" onclick="analyzeImage()">
+                            <!-- <span class="icon">🔍</span> -->
+                            Analyze Wound
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearImage()">
+                            Choose Different Image
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loadingSection" class="loading-section" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing wound image...</p>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section" style="display: none;">
+                    <h3>Analysis Results</h3>
+                    <div id="resultsContent" class="results-content">
+                        <!-- Results -->
+                    </div>
+                    <button class="btn btn-primary" onclick="analyzeAnother()">
+                        Analyze Another Image
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p class="copyright">© BandAId - Hornet Hacks 2025</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
