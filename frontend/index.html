@@ -1,36 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Band-AI-D | AI Wound Infection Detector</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BandAId</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header>
+        <div class="container header-content">
+            <div class="header-left">
+                <div class="logo-space">
+                    <img src="../frontend/images/logo.jpeg" alt="logo" class="logo-img" height="50px">
+                </div>
+            </div>
+            <div class="header-center">
+                <h1 class="main-heading">BandAId</h1>
+                <p class="tagline">AI Wound Infection Detection</p>
+            </div>
+        </div>
+    </header>
 
-  <header class="navbar">
-    <div class="logo-section">
-      <img src="logo.png" alt="Band-AI-D Logo" class="logo">
-      <h1 class="site-title">BAND-AI-D</h1>
-    </div>
-  </header>
+    <main>
+        <div class="container">
+            <div class="upload-section">
+                <h2>Upload or Capture Wound Image</h2>
+                <p class="instruction">Choose an option below to analyze a wound</p>
 
-  <main class="container">
-    <div class="box">
-      <h2>AI Wound Infection Detector</h2>
-      <p>Upload or click a picture to detect infection using AI.</p>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Upload Image
+                    </button>
+                    <button class="btn btn-primary" onclick="openCamera()">
+                        Take Photo
+                    </button>
+                </div>
 
-      <input type="file" id="fileInput" accept="image/*" hidden />
-      <button id="uploadBtn">Upload Image</button>
-      <button id="clickBtn">Click Picture</button>
-      <button id="submitBtn">Submit</button>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
 
-      <p id="errorMsg"></p>
-    </div>
-  </main>
+                <div id="cameraSection" class="camera-section" style="display: none;">
+                    <video id="camera" autoplay playsinline></video>
+                    <div class="camera-controls">
+                        <button class="btn btn-success" onclick="capturePhoto()">
+                            Capture
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeCamera()">
+                            Cancel
+                        </button>
+                    </div>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                </div>
 
-  <script src="script.js"></script>
+                <!-- Image Preview Section -->
+                <div id="previewSection" class="preview-section" style="display: none;">
+                    <h3>Selected Image</h3>
+                    <img id="imagePreview" alt="Wound preview">
+                    <div class="preview-actions">
+                        <button class="btn btn-success" onclick="analyzeImage()">
+
+                            Analyze Wound
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearImage()">
+                            Choose Different Image
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loadingSection" class="loading-section" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing wound image...</p>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section" style="display: none;">
+                    <h3>Analysis Results</h3>
+                    <div id="resultsContent" class="results-content">
+                        <!-- AI Results will be inserted here -->
+                    </div>
+                    
+                    <!-- Nearby Hospitals Section -->
+                    <div id="hospitalsSection" class="hospitals-section">
+                        <h3> Nearby Medical Facilities</h3>
+                        <p class="hospital-instruction">Based on your location, here are the 5 nearest facilities:</p>
+                        <div id="hospitalsList" class="hospitals-list">
+                            <!-- Hospital cards will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="analyzeAnother()">
+                        Analyze Another Image
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p class="copyright">© BandAId - Hornet Hacks 2025</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
-
-
