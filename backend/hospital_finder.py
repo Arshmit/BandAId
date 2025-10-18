@@ -76,7 +76,7 @@ def _search_places_v1(lat, lon, is_infected, max_results, radius_km):
             hospitals.append({
                 "name": (p.get("displayName", {}) or {}).get("text", "Unknown"),
                 "address": p.get("formattedAddress", "Address not available"),
-                "distance": f"{distance} km",
+                "distance": f"{distance} mi",
                 "distance_raw": distance,
                 "rating": p.get("rating", "N/A"),
                 "phone": "N/A",  # Not requested in field mask to save quota
@@ -94,7 +94,7 @@ def _search_places_v1(lat, lon, is_infected, max_results, radius_km):
 def calculate_distance(lat1, lon1, lat2, lon2):
     """
     Calculate the distance between two points on Earth using Haversine formula
-    Returns distance in kilometers
+    Returns distance in miles
     """
     # Convert to radians
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
@@ -105,9 +105,9 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
     
-    # Radius of earth in kilometers
-    km = 6371 * c
-    return round(km, 1)
+    # Calculate in miles (Earth radius in km * 0.621371 for km to miles conversion)
+    miles = 6371 * c * 0.621371
+    return round(miles, 1)
 
 
 def find_nearby_hospitals(lat, lon, is_infected=False, max_results=5):
@@ -187,7 +187,7 @@ def find_nearby_hospitals(lat, lon, is_infected=False, max_results=5):
             hospitals.append({
                 "name": place.get('name', 'Unknown'),
                 "address": place.get('vicinity', 'Address not available'),
-                "distance": f"{distance} km",
+                "distance": f"{distance} mi",
                 "distance_raw": distance,  # for sorting
                 "rating": place.get('rating', 'N/A'),
                 "phone": place.get('formatted_phone_number', 'N/A'),

@@ -1,7 +1,10 @@
 // Configuration
 const API_URL = 'http://localhost:8000/predict'; // Change this to your backend URL
+const GOOGLE_PLACES_API_KEY = 'AIzaSyDbeJQAyI2_FkgjNXtxQ2FNdOuljnCLij4'; // Get this from Google Cloud Console
+
 let currentImage = null;
 let cameraStream = null;
+let userLocation = null;
 
 // Handle file selection from upload
 function handleFileSelect(event) {
@@ -101,10 +104,27 @@ async function analyzeImage() {
     document.getElementById('loadingSection').style.display = 'block';
     document.getElementById('resultsSection').style.display = 'none';
     
+    // Step 1: Get user location
+    try {
+        console.log('Requesting user location...');
+        userLocation = await getUserLocation();
+        console.log('Location obtained:', userLocation);
+    } catch (error) {
+        console.error('Location error:', error);
+        
+        // Use default location if geolocation fails
+        userLocation = { lat: 37.3382, lon: -121.8863 }; // Default to San Jose
+        console.log('Using default location:', userLocation);
+        
+        alert('Could not get your exact location. Using default location for hospital search. Please enable location services for better results.');
+    }
+    
     try {
         // Create form data
         const formData = new FormData();
         formData.append('file', currentImage);
+        formData.append('latitude', userLocation.lat);
+        formData.append('longitude', userLocation.lon);
         
         // Send to backend
         const response = await fetch(API_URL, {
@@ -117,36 +137,56 @@ async function analyzeImage() {
         }
         
         const result = await response.json();
-        displayResults(result);
+        
+        // The backend already returns hospitals in the result
+        const hospitals = result.hospitals || [];
+        
+        // Display everything
+        displayResults(result, hospitals);
         
     } catch (error) {
         console.error('Analysis error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
         
         // Hide loading
         document.getElementById('loadingSection').style.display = 'none';
         
-        // Show demo results 
-        alert('Could not connect to backend. Showing demo results instead.');
-        displayDemoResults();
+        // Show detailed error message
+        let errorMsg = 'Could not connect to backend.\n\n';
+        errorMsg += 'Please check:\n';
+        errorMsg += '1. Backend is running at http://localhost:8000\n';
+        errorMsg += '2. Run: cd backend && python3 app.py\n';
+        errorMsg += '3. Check browser console for details\n\n';
+        errorMsg += `Error: ${error.message}`;
+        
+        alert(errorMsg);
+        document.getElementById('previewSection').style.display = 'block';
     }
 }
 
 // Display results
-function displayResults(result) {
+function displayResults(result, hospitals) {
+    console.log('Displaying results:', result);
+    console.log('Hospitals:', hospitals);
+    
     document.getElementById('loadingSection').style.display = 'none';
     document.getElementById('resultsSection').style.display = 'block';
     
     const resultsContent = document.getElementById('resultsContent');
     
-    // Determine status class
+    // Determine status class based on binary classification
     let statusClass = 'status-healthy';
     let statusIcon = '✅';
-    if (result.prediction === 'At Risk') {
-        statusClass = 'status-at-risk';
-        statusIcon = '⚡';
-    } else if (result.prediction === 'Infected') {
+    
+    if (result.prediction === 'Infected') {
         statusClass = 'status-infected';
         statusIcon = '⚠️';
+    } else if (result.prediction === 'Not Infected') {
+        statusClass = 'status-healthy';
+        statusIcon = '✅';
     }
     
     // Build results HTML
@@ -156,43 +196,25 @@ function displayResults(result) {
             <div class="confidence">Confidence: ${(result.confidence * 100).toFixed(1)}%</div>
         </div>
         
-        <div class="probabilities">
-            <h4>Detailed Analysis:</h4>
-            ${Object.entries(result.probabilities).map(([label, prob]) => `
-                <div class="probability-item">
-                    <span>${label}</span>
-                    <span><strong>${(prob * 100).toFixed(1)}%</strong></span>
-                </div>
-            `).join('')}
-        </div>
-        
         <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 10px; color: #856404;">
             <strong>⚕️ Medical Advice:</strong>
             ${getAdvice(result.prediction)}
         </div>
     `;
+    
+    // Display hospitals
+    if (hospitals && hospitals.length > 0) {
+        displayHospitals(hospitals);
+    } else {
+        console.warn('No hospitals found');
+    }
 }
 
-// Display demo results (for testing without backend)
-function displayDemoResults() {
-    const demoResult = {
-        prediction: 'At Risk',
-        confidence: 0.00,
-        probabilities: {
-            'Healthy': 0.0,
-            'At Risk': 0.0,
-            'Infected': 0.00
-        }
-    };
-    displayResults(demoResult);
-}
-
-// Get medical advice based on prediction
+// Get medical advice based on prediction (binary classification)
 function getAdvice(prediction) {
     const advice = {
-        'Healthy': 'X',
-        'At Risk': 'X',
-        'Infected': 'X',
+        'Not Infected': '✅ This wound does not appear to be infected. Continue regular wound care: keep it clean, dry, and covered. Monitor for signs of infection (increased redness, swelling, warmth, pus, or fever) and consult a doctor if symptoms develop.',
+        'Infected': '⚠️ This wound appears to be infected. Please seek immediate medical attention from the nearest hospital or emergency room. Signs of infection include redness, swelling, warmth, pus, increased pain, or fever. Do not delay treatment.',
     };
     return advice[prediction] || 'Please consult a healthcare professional for proper evaluation.';
 }
@@ -203,8 +225,65 @@ function analyzeAnother() {
     document.getElementById('resultsSection').style.display = 'none';
 }
 
+// ===== LOCATION & HOSPITAL FUNCTIONS =====
+
+// Get user's current location
+function getUserLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Geolocation is not supported by your browser'));
+            return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve({
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
+                });
+            },
+            (error) => {
+                reject(error);
+            }
+        );
+    });
+}
+
+// Display hospitals in the UI
+function displayHospitals(hospitals) {
+    const hospitalsList = document.getElementById('hospitalsList');
+    hospitalsList.innerHTML = '';
+    
+    hospitals.slice(0, 5).forEach((hospital, index) => {
+        const card = document.createElement('div');
+        card.className = 'hospital-card';
+        
+        // Generate Google Maps directions URL
+        const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(hospital.address)}`;
+        
+        card.innerHTML = `
+            <div class="hospital-header">
+                <div>
+                    <div class="hospital-name">${index + 1}. ${hospital.name}</div>
+                    <div class="hospital-address">📍 ${hospital.address}</div>
+                </div>
+                <div class="hospital-distance">${hospital.distance}</div>
+            </div>
+            <div class="hospital-info">
+                <span class="hospital-phone">📞 ${hospital.phone || 'N/A'}</span>
+            </div>
+            <a href="${directionsUrl}" target="_blank" class="btn-directions">
+                🧭 Get Directions
+            </a>
+        `;
+        
+        hospitalsList.appendChild(card);
+    });
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     console.log('BandAId Frontend Loaded');
     console.log('Backend API URL:', API_URL);
+    console.log('Google Places API Key configured:', GOOGLE_PLACES_API_KEY !== 'YOUR_API_KEY_HERE');
 });
