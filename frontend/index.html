@@ -11,7 +11,7 @@
         <div class="container header-content">
             <div class="header-left">
                 <div class="logo-space">
-                    <img src="../frontend/images/logo.jpeg" alt="logo" class="logo-img" height="50px">
+                    <img src="" alt="">
                 </div>
             </div>
             <div class="header-center">
@@ -38,6 +38,7 @@
 
                 <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
 
+                <!-- Camera Section (hidden by default) -->
                 <div id="cameraSection" class="camera-section" style="display: none;">
                     <video id="camera" autoplay playsinline></video>
                     <div class="camera-controls">
@@ -57,7 +58,7 @@
                     <img id="imagePreview" alt="Wound preview">
                     <div class="preview-actions">
                         <button class="btn btn-success" onclick="analyzeImage()">
-
+                            <!-- <span class="icon">🔍</span> -->
                             Analyze Wound
                         </button>
                         <button class="btn btn-secondary" onclick="clearImage()">
@@ -76,18 +77,8 @@
                 <div id="resultsSection" class="results-section" style="display: none;">
                     <h3>Analysis Results</h3>
                     <div id="resultsContent" class="results-content">
-                        <!-- AI Results will be inserted here -->
+                        <!-- Results -->
                     </div>
-                    
-                    <!-- Nearby Hospitals Section -->
-                    <div id="hospitalsSection" class="hospitals-section">
-                        <h3> Nearby Medical Facilities</h3>
-                        <p class="hospital-instruction">Based on your location, here are the 5 nearest facilities:</p>
-                        <div id="hospitalsList" class="hospitals-list">
-                            <!-- Hospital cards will be inserted here -->
-                        </div>
-                    </div>
-                    
                     <button class="btn btn-primary" onclick="analyzeAnother()">
                         Analyze Another Image
                     </button>
