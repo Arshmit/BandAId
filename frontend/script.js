@@ -1,6 +1,5 @@
 // Configuration
 const API_URL = 'http://localhost:8000/predict'; // Change this to your backend URL
-const GOOGLE_PLACES_API_KEY = 'AIzaSyDbeJQAyI2_FkgjNXtxQ2FNdOuljnCLij4'; // Get this from Google Cloud Console
 
 let currentImage = null;
 let cameraStream = null;
@@ -8,49 +7,118 @@ let userLocation = null;
 
 // Handle file selection from upload
 function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-        currentImage = file;
-        displayImagePreview(file);
-    } else {
-        alert('Please select a valid image file');
+    console.log('File select triggered', event);
+    try {
+        const file = event.target.files[0];
+        console.log('Selected file:', file);
+        if (file && file.type.startsWith('image/')) {
+            currentImage = file;
+            displayImagePreview(file);
+        } else {
+            console.warn('Invalid file type selected:', file ? file.type : 'no file');
+            alert('Please select a valid image file (JPEG, PNG, etc.)');
+        }
+    } catch (error) {
+        console.error('Error in handleFileSelect:', error);
+        alert('Error selecting file. Please try again.');
     }
 }
 
 // Display image preview
 function displayImagePreview(file) {
+    console.log('Displaying preview for file:', file.name);
     const reader = new FileReader();
+    
     reader.onload = function(e) {
+        console.log('File read complete');
         const preview = document.getElementById('imagePreview');
+        if (!preview) {
+            console.error('imagePreview element not found');
+            return;
+        }
         preview.src = e.target.result;
         
         // Show preview section, hide others
-        document.getElementById('previewSection').style.display = 'block';
-        document.getElementById('cameraSection').style.display = 'none';
-        document.getElementById('resultsSection').style.display = 'none';
+        const sections = {
+            'previewSection': 'block',
+            'cameraSection': 'none',
+            'resultsSection': 'none',
+            'questionnaireSection': 'none'
+        };
+        
+        Object.entries(sections).forEach(([id, display]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.style.display = display;
+            } else {
+                console.warn(`${id} element not found`);
+            }
+        });
     };
-    reader.readAsDataURL(file);
+    
+    reader.onerror = function(error) {
+        console.error('Error reading file:', error);
+        alert('Error loading image preview. Please try again.');
+    };
+    
+    try {
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Error starting file read:', error);
+        alert('Error processing image. Please try a different file.');
+    }
 }
 
 // Open camera
 async function openCamera() {
+    console.log('Opening camera...');
     try {
         const cameraSection = document.getElementById('cameraSection');
         const video = document.getElementById('camera');
         
-        cameraSection.style.display = 'block';
-        document.getElementById('previewSection').style.display = 'none';
-        document.getElementById('resultsSection').style.display = 'none';
+        if (!cameraSection || !video) {
+            console.error('Camera elements not found');
+            alert('Could not initialize camera interface');
+            return;
+        }
+        
+        // Hide all sections except camera
+        const sections = {
+            'cameraSection': 'block',
+            'previewSection': 'none',
+            'resultsSection': 'none',
+            'questionnaireSection': 'none'
+        };
+        
+        Object.entries(sections).forEach(([id, display]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.style.display = display;
+            }
+        });
+        
+        console.log('Requesting camera access...');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Camera API not supported in this browser');
+        }
         
         // Request camera access
         cameraStream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: 'environment' } // Try to use back camera on mobile
         });
         
+        console.log('Camera access granted');
         video.srcObject = cameraStream;
+        
+        // Add error handler for video element
+        video.onerror = function(error) {
+            console.error('Video element error:', error);
+            alert('Error displaying camera feed');
+        };
+        
     } catch (error) {
         console.error('Camera access error:', error);
-        alert('Could not access camera. Please make sure you have granted camera permissions.');
+        alert('Could not access camera. Please make sure you have granted camera permissions and are using a supported browser.');
     }
 }
 
@@ -119,12 +187,31 @@ async function analyzeImage() {
         alert('Could not get your exact location. Using default location for hospital search. Please enable location services for better results.');
     }
     
+    // Show questionnaire instead of sending request immediately
+    document.getElementById('loadingSection').style.display = 'none';
+    document.getElementById('questionnaireSection').style.display = 'block';
+}
+
+// Submit questionnaire and send everything to backend
+async function submitQuestionnaire() {
+    // Show loading
+    document.getElementById('questionnaireSection').style.display = 'none';
+    document.getElementById('loadingSection').style.display = 'block';
+    
     try {
-        // Create form data
+        // Get questionnaire answers
+        const q1Answer = document.querySelector('input[name="q1"]:checked')?.value || 'no';
+        const q2Answer = document.getElementById('q2').value;
+        const q3Answer = document.querySelector('input[name="q3"]:checked')?.value || 'no';
+
+        // Create form data with image, location, and questionnaire
         const formData = new FormData();
         formData.append('file', currentImage);
         formData.append('latitude', userLocation.lat);
         formData.append('longitude', userLocation.lon);
+        formData.append('q1_hot_touch', q1Answer);
+        formData.append('q2_pain_level', q2Answer);
+        formData.append('q3_wheezing', q3Answer);
         
         // Send to backend
         const response = await fetch(API_URL, {
@@ -163,7 +250,7 @@ async function analyzeImage() {
         errorMsg += `Error: ${error.message}`;
         
         alert(errorMsg);
-        document.getElementById('previewSection').style.display = 'block';
+        document.getElementById('questionnaireSection').style.display = 'block';
     }
 }
 
@@ -210,13 +297,19 @@ function displayResults(result, hospitals) {
     }
 }
 
-// Get medical advice based on prediction (binary classification)
+// Get medical advice based on prediction and risk factors
 function getAdvice(prediction) {
-    const advice = {
-        'Not Infected': '✅ This wound does not appear to be infected. Continue regular wound care: keep it clean, dry, and covered. Monitor for signs of infection (increased redness, swelling, warmth, pus, or fever) and consult a doctor if symptoms develop.',
-        'Infected': '⚠️ This wound appears to be infected. Please seek immediate medical attention from the nearest hospital or emergency room. Signs of infection include redness, swelling, warmth, pus, increased pain, or fever. Do not delay treatment.',
-    };
-    return advice[prediction] || 'Please consult a healthcare professional for proper evaluation.';
+    // Get questionnaire answers
+    const painLevel = parseInt(document.getElementById('q2').value) || 0;
+    const isHot = document.querySelector('input[name="q1"]:checked')?.value === 'yes';
+    const isWheezing = document.querySelector('input[name="q3"]:checked')?.value === 'yes';
+    
+    // Only show medical advice if infected or if there are risk factors
+    if (prediction === 'Infected' || painLevel >= 5 || isHot || isWheezing) {
+        return '⚠️ Please seek immediate medical attention from the nearest hospital or emergency room. Signs of infection include redness, swelling, warmth, pus, increased pain, or fever. Do not delay treatment.';
+    } else {
+        return '✅ Based on the image analysis, no immediate medical attention appears necessary.';
+    }
 }
 
 // Analyze another image
@@ -253,30 +346,25 @@ function getUserLocation() {
 function displayHospitals(hospitals) {
     const hospitalsList = document.getElementById('hospitalsList');
     hospitalsList.innerHTML = '';
-    
-    hospitals.slice(0, 5).forEach((hospital, index) => {
+    // `hospitals` is expected to be an array of objects with {name, address}
+    hospitals.slice(0, 3).forEach((hospital, index) => {
         const card = document.createElement('div');
         card.className = 'hospital-card';
-        
-        // Generate Google Maps directions URL
-        const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(hospital.address)}`;
-        
+
+        const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hospital.address)}`;
+
         card.innerHTML = `
             <div class="hospital-header">
                 <div>
                     <div class="hospital-name">${index + 1}. ${hospital.name}</div>
                     <div class="hospital-address">📍 ${hospital.address}</div>
                 </div>
-                <div class="hospital-distance">${hospital.distance}</div>
-            </div>
-            <div class="hospital-info">
-                <span class="hospital-phone">📞 ${hospital.phone || 'N/A'}</span>
             </div>
             <a href="${directionsUrl}" target="_blank" class="btn-directions">
-                🧭 Get Directions
+                🧭 Open in Maps
             </a>
         `;
-        
+
         hospitalsList.appendChild(card);
     });
 }
@@ -285,5 +373,13 @@ function displayHospitals(hospitals) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('BandAId Frontend Loaded');
     console.log('Backend API URL:', API_URL);
-    console.log('Google Places API Key configured:', GOOGLE_PLACES_API_KEY !== 'YOUR_API_KEY_HERE');
+    
+    // Setup pain scale value display
+    const painScale = document.getElementById('q2');
+    const painValue = document.getElementById('q2Value');
+    if (painScale && painValue) {
+        painScale.addEventListener('input', function() {
+            painValue.textContent = this.value;
+        });
+    }
 });
