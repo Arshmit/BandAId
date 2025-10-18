@@ -1,5 +1,5 @@
 // Configuration
-const API_URL = 'http://localhost:8000/predict'; // Change this to your backend URL
+const API_URL = 'http://localhost:8080/api/predict'; // Change this to your backend URL
 let currentImage = null;
 let cameraStream = null;
 
