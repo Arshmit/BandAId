@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Band-AI-D | AI Wound Infection Detector</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo-section">
+      <img src="logo.png" alt="Band-AI-D Logo" class="logo">
+      <h1 class="site-title">BAND-AI-D</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="box">
+      <h2>AI Wound Infection Detector</h2>
+      <p>Upload or click a picture to detect infection using AI.</p>
+
+      <input type="file" id="fileInput" accept="image/*" hidden />
+      <button id="uploadBtn">Upload Image</button>
+      <button id="clickBtn">Click Picture</button>
+      <button id="submitBtn">Submit</button>
+
+      <p id="errorMsg"></p>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+

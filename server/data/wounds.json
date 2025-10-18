@@ -1,0 +1,21 @@
+[
+  {
+    "id": "606.jpg_wound_location",
+    "image_name": "606.jpg",
+    "field": "Wound Location",
+    "answer": "Abdomen"
+  },
+  {
+    "id": "607.jpg_wound_type",
+    "image_name": "607.jpg",
+    "field": "Wound Type",
+    "answer": "Laceration"
+  },
+  {
+    "id": "608.jpg_wound_depth",
+    "image_name": "608.jpg",
+    "field": "Wound Depth",
+    "answer": "Shallow"
+  }
+]
+

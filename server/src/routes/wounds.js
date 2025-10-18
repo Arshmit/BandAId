@@ -1,45 +1,61 @@
 import { Router } from "express";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import csv from "csv-parser";
 
 const router = Router();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_PATH = path.resolve(__dirname, "../../data/wounds.json");
+// Change this to your real folder
+const DATA_FOLDER = "/Users/harnoorkaur/Desktop/Final_dataset";
 
-let records = [];
-try {
-  if (fs.existsSync(DATA_PATH)) {
-    records = JSON.parse(fs.readFileSync(DATA_PATH, "utf-8"));
+// Utility to load CSV dynamically based on split
+async function loadCSV(split = "train") {
+  const filename = `final_wound_dataset_${split}.csv`;
+  const filePath = path.join(DATA_FOLDER, filename);
+  const rows = [];
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Dataset file not found: ${filePath}`);
   }
-} catch (e) {
-  console.warn("Could not load wounds.json:", e.message);
+
+  return new Promise((resolve, reject) => {
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on("data", row => rows.push(row))
+      .on("end", () => resolve(rows))
+      .on("error", reject);
+  });
 }
 
-router.get("/", (req, res) => {
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
-  const q = (req.query.q || "").toString().toLowerCase();
-  let rows = records;
+// GET /api/wounds?split=train&q=abdomen&limit=5
+router.get("/", async (req, res, next) => {
+  try {
+    const split = req.query.split || "train";
+    const q = (req.query.q || "").toLowerCase();
+    const limit = Number(req.query.limit) || 20;
 
-  if (q) {
-    rows = rows.filter(r =>
-      ["id", "image_name", "field", "answer"]
-        .map(k => (r[k] || "").toString().toLowerCase())
-        .some(v => v.includes(q))
-    );
+    const records = await loadCSV(split);
+    console.log("Sample record keys:", Object.keys(records[0])); // 👈 ADD THIS HERE
+
+    let filtered = records;
+    if (q) {
+      filtered = records.filter(r =>
+        Object.values(r)
+          .join(" ")
+          .toLowerCase()
+          .includes(q)
+      );
+    }
+
+    res.json({
+      split,
+      total: filtered.length,
+      data: filtered.slice(0, limit),
+    });
+  } catch (err) {
+    next(err);
   }
-
-  const start = (page - 1) * limit;
-  res.json({ page, limit, total: rows.length, data: rows.slice(start, start + limit) });
-});
-
-router.get("/:id", (req, res) => {
-  const row = records.find(r => r.id === req.params.id);
-  if (!row) return res.status(404).json({ error: "not found" });
-  res.json(row);
 });
 
 export default router;
+
