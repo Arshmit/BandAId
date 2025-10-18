@@ -1,17 +1,2 @@
-**Hornet Hacks 2025 Hackathon Project**
-
-An AI-powered wound infection risk detection system. Upload or capture wound images to get instant AI analysis.
-
-Project Structure
-
-```
-BandAId/
-├── frontend/
-│   ├── index.html      # Main HTML page
-│   ├── style.css       # Styling
-│   └── script.js       # JavaScript functionality
-└── README.md           # This file
-
-© 2025 BandAId Team
-
-```
+# BandAId
+For our Hornet Hacks 2025 hackathon. We are creating an AI program which looks at wounds and identifies if they are at risk or infection or not
