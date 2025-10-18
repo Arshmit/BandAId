@@ -1,0 +1,8 @@
+# Python virtual env
+.venv/
+
+# Environment files
+backend/.env
+
+# Mac OS
+.DS_Store
