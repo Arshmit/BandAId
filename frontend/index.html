@@ -11,7 +11,7 @@
         <div class="container header-content">
             <div class="header-left">
                 <div class="logo-space">
-                    <img src="" alt="">
+                    <img src="../frontend/images/logo.jpeg" alt="logo" class="logo-img" height="50px">
                 </div>
             </div>
             <div class="header-center">
@@ -38,7 +38,6 @@
 
                 <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
 
-                <!-- Camera Section (hidden by default) -->
                 <div id="cameraSection" class="camera-section" style="display: none;">
                     <video id="camera" autoplay playsinline></video>
                     <div class="camera-controls">
@@ -58,7 +57,7 @@
                     <img id="imagePreview" alt="Wound preview">
                     <div class="preview-actions">
                         <button class="btn btn-success" onclick="analyzeImage()">
-                            <!-- <span class="icon">🔍</span> -->
+
                             Analyze Wound
                         </button>
                         <button class="btn btn-secondary" onclick="clearImage()">
@@ -73,12 +72,52 @@
                     <p>Analyzing wound image...</p>
                 </div>
 
+                <!-- Questionnaire Section -->
+                <div id="questionnaireSection" class="questionnaire-section" style="display: none;">
+                    <h3>Quick Assessment</h3>
+                    <p>Please answer these questions about your wound:</p>
+                    <div class="question-group">
+                        <div class="question">
+                            <label>Question 1: Does the wound feel hot to touch?</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="q1" value="yes"> Yes</label>
+                                <label><input type="radio" name="q1" value="no"> No</label>
+                            </div>
+                        </div>
+                        <div class="question">
+                            <label>Question 2: On a scale of 1-10, how painful is the wound?</label>
+                            <input type="range" id="q2" min="1" max="10" value="5">
+                            <span id="q2Value">5</span>
+                        </div>
+                        <div class="question">
+                            <label>Question 3: Is there any wheezing or difficulty breathing?</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="q3" value="yes"> Yes</label>
+                                <label><input type="radio" name="q3" value="no"> No</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="submitQuestionnaire()">
+                        Submit
+                    </button>
+                </div>
+
                 <!-- Results Section -->
                 <div id="resultsSection" class="results-section" style="display: none;">
                     <h3>Analysis Results</h3>
                     <div id="resultsContent" class="results-content">
-                        <!-- Results -->
+                        <!-- AI Results will be inserted here -->
                     </div>
+
+                    <!-- Nearby Hospitals Section -->
+                    <div id="hospitalsSection" class="hospitals-section">
+                        <h3> Nearby Medical Facilities</h3>
+                        <p class="hospital-instruction">Based on your location, here are the 3 nearest facilities:</p>
+                        <div id="hospitalsList" class="hospitals-list">
+                            <!-- Hospital cards will be inserted here -->
+                        </div>
+                    </div>
+
                     <button class="btn btn-primary" onclick="analyzeAnother()">
                         Analyze Another Image
                     </button>
@@ -92,7 +131,7 @@
             <p class="copyright">© BandAId - Hornet Hacks 2025</p>
         </div>
     </footer>
-    <script src="script.js"></script>
 
+    <script src="script.js"></script>
 </body>
 </html>
