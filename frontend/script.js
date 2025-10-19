@@ -49,7 +49,13 @@ function showError(message) {
 
 // Configuration
 const API_URL = 'http://localhost:8000/predict'; // Change this to your backend URL
+<<<<<<< Updated upstream
 let currentImage = null;
+=======
+const GOOGLE_PLACES_API_KEY = 'AIzaSyDbeJQAyI2_FkgjNXtxQ2FNdOuljnCLij4'; // Get this from Google Cloud Console
+
+let currentImage;
+>>>>>>> Stashed changes
 let cameraStream = null;
 
 // Handle file selection from upload

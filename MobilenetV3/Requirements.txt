@@ -1,0 +1,6 @@
+python.exe -m pip install --upgrade pip
+pip install grad-cam
+pip install (tqdm?)
+pip install numpy
+pip install pytorch-gradcam
+pip install -U tensorflow pandas scikit-learn matplotlib
