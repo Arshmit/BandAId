@@ -242,6 +242,6 @@ if __name__ == "__main__":
     # Run complete assessment
     results = quick_wound_assessment(model_path, image_path)
 
-    print(f"\n✅ Assessment complete!")
+    print(f"\n✅ Assessmsniipent complete!")
     print(f"💡 This system provides AI-assisted wound evaluation.")
     print(f"📞 Always consult healthcare professionals for medical decisions.")
